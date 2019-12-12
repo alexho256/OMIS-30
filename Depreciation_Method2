@@ -1,0 +1,77 @@
+def mydaterange(d1, d2):
+    d1 = d1.split('/')
+    d2 = d2.split('/')
+    year2 = int(d2[2])
+    year1 = int(d1[2])
+    month2 = int(d2[0])
+    month1 = int(d1[0])
+    day2 = int(d2[1])
+    day1 = int(d1[1])
+
+    time = ((year2 - year1) * 12) + (month2 - month1)
+    if day1 < day2:
+        time = time + 1
+    time = time / 12
+    return time
+
+
+
+def straightline(aname, acq_date, pprice, life, scrap, end_date):
+    print(aname, acq_date, pprice, life, scrap, end_date)
+    time = mydaterange(acq_date, end_date)
+    time = float(time)
+    factor = (pprice - scrap) / life
+    tot_dep = factor * time
+    return tot_dep
+
+
+def reducingbalance(aname, adate, pp, rate, life, scrap, edate):
+    print(aname, adate, pp, rate, life, scrap, edate)
+
+    time = mydaterange(adate, edate)
+    time = int(time)
+    total_depreciated = 0
+    for i in range(time):
+        yearly_depreciated = pp * rate
+        pp -= yearly_depreciated
+        total_depreciated += yearly_depreciated
+    return total_depreciated, pp
+
+
+inputs_list = []
+with open('Modified_FinalProject.csv') as f:
+    line = f.readline()
+    while True:
+        line = f.readline()
+        if not line:
+            break
+        else:
+            inputs_list.append(line.rstrip().split(sep=','))
+
+for aname, adate, pp, rate, life, scrap, sale, edate, method in inputs_list:
+
+    if method == 'Straight line':
+        pp = float(pp)
+        life = float(life)
+        scrap = float(scrap)
+        tot_dep = straightline(aname, adate, pp, life, scrap, edate)
+        print('Total depreciation = ', round(tot_dep, 2))
+        book = pp - tot_dep
+        print(sale)
+        if sale != '-':
+            pl = float(sale) - book
+            print('{0} P&L = {1:.2f}'.format(aname, pl))
+        else:
+            print('Cannot calculate a P&L as asset has not been sold')
+    elif method == 'Reducing Balance':
+        pp = float(pp)
+        scrap = float(scrap)
+        rate = rate.strip('%')
+        rate = float(rate) / 100
+        total_depreciation, book_value = reducingbalance(aname, adate, pp, rate, life, scrap, edate)
+        print(aname, 'Total depreciation = ', round(total_depreciation, 2))
+        if sale != '-':
+            pl = float(sale) - book_value
+            print('{0} P&L = {1:.2f}'.format(aname, pl))
+    else:
+        continue
