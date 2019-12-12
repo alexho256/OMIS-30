@@ -67,5 +67,7 @@ for aname, adate, pp, rate, life, scrap, sale, edate, method in inputs_list:
         if sale != '-':
             pl = float(sale) - book_value
             print('{0} P&L = {1:.2f}'.format(aname, pl))
+        else:
+            print('Cannot calculate a P&L as asset has not been sold')
     else:
         continue
