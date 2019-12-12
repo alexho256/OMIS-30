@@ -1,0 +1,93 @@
+import pandas as pd
+from datetime import datetime
+
+
+def time_between():
+    acquisition_date = datetime.strptime(data.iloc[0][item], "%m/%d/%Y")
+    end_date = datetime.strptime(data.iloc[6][item], "%m/%d/%Y")
+    time_depreciated = ((end_date.year - acquisition_date.year) * 12) + (
+            end_date.month - acquisition_date.month)
+    if acquisition_date.day < end_date.day:
+        time_depreciated = time_depreciated + 1
+    time_depreciated = time_depreciated / 12
+    return time_depreciated
+
+
+def straight_line():
+    cost = data.iloc[1][item]
+    salvage = data.iloc[4][item]
+    life = data.iloc[3][item]
+    straight_line_annual = ((float(cost) - float(salvage)) / float(life))
+    time_depreciated = time_between()
+    total_depreciated = time_depreciated * straight_line_annual
+    return total_depreciated
+
+
+def reducing_balance():
+    cost = data.iloc[1][item]
+    salvage = data.iloc[4][item]
+    rate = data.iloc[2][item].strip('%')
+    rate = float(rate) / 100
+    time_depreciated = int(time_between())
+    book_value = float(cost)
+    total_depreciated = 0
+    for i in range(time_depreciated):
+        yearly_depreciated = (book_value - float(salvage)) * rate
+        book_value -= yearly_depreciated
+        total_depreciated += yearly_depreciated
+    return total_depreciated, book_value
+
+
+def book_value_straight():
+    cost = data.iloc[1][item]
+    total_depreciated = straight_line()
+    book_value = float(cost) - total_depreciated
+    return book_value
+
+
+def sale_price_straight():
+    sale = data.iloc[5][item]
+    total_depreciated = straight_line()
+    net_book_value = (float(data.iloc[1][item])) - total_depreciated
+    profit_or_loss_straight = float(sale) - float(net_book_value)
+    return profit_or_loss_straight
+
+
+def sale_price_reducing():
+    sale = data.iloc[5][item]
+    total_depreciation, book_value = reducing_balance()
+    net_book_value = (float(data.iloc[1][item])) - total_depreciation
+    profit_or_loss_reducing = float(sale) - float(net_book_value)
+    return profit_or_loss_reducing
+
+
+if __name__ == '__main__':
+    depreciation_list = []
+    book_value_list = []
+    data = pd.read_csv("FinalProject_Asset_As_Column.csv")
+    header = list(data)
+    header.pop(0)
+    for item in header:
+        item = item
+        if data.iloc[7][item] == "Straight line":
+            if data.iloc[5][item] == "-":
+                depreciation = "${0:.2f}".format(straight_line())
+                print(item, ": Total Depreciation = ", depreciation)
+                print("")
+            else:
+                print(item, ": Total Depreciation = ", "${0:.2f}".format(straight_line()))
+                print(item, ": Profit/Loss = ", "${0:.2f}".format(sale_price_straight()))
+                print("")
+        elif data.iloc[7][item] == "Reducing Balance":
+            if data.iloc[5][item] == "-":
+                time_between()
+                total_depreciation, book_value = reducing_balance()
+                print(item, ": Total Depreciation = ", "${0:.2f}".format(total_depreciation))
+            else:
+                time_between()
+                total_depreciation, book_value = reducing_balance()
+                print(item, ": Total Depreciation = ", "${0:.2f}".format(total_depreciation))
+                print(item, ": Profit/Loss = ", "${0:.2f}".format(sale_price_reducing()))
+                print("")
+        else:
+            print("Error")
